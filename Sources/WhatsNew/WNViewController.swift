@@ -7,26 +7,13 @@
 
 import UIKit
 
-public protocol WNViewControllerDataSource: NSObjectProtocol {
-    func itemsForWhatsNewViewController() -> [WNItem]
-}
-public protocol WNViewControllerDelegate: NSObjectProtocol {
-    func whatsNewViewControllerDidSelectContinue()
-}
-
 public class WNViewController: UIViewController {
     // MARK: - Properties
     private let insets = UIEdgeInsets(top: 48, left: 32, bottom: 32, right: 32)
     private let continueButtonHeight: CGFloat = 44
     private let itemCellReuseIdentifier = "WhatsNewItemCell-SSWhatsNewViewController"
     private var items: [WNItem] = []
-    public weak var dataSource: WNViewControllerDataSource? = nil {
-        didSet {
-            items = dataSource?.itemsForWhatsNewViewController() ?? []
-            itemsCollectionView?.reloadSections(.init(integer: .zero))
-        }
-    }
-    public weak var delegate: WNViewControllerDelegate?
+    private var appVersion: String
     
     
     // MARK: - Views
@@ -49,9 +36,9 @@ public class WNViewController: UIViewController {
     }()
     
     private func configContinueButton() {
-        continueButton.addAction(UIAction(handler: { [weak self] _ in
-            self?.delegate?.whatsNewViewControllerDidSelectContinue()
-            self?.dismiss(animated: true)
+        continueButton.addAction(UIAction(handler: { _ in
+            self.updateWhatsNew(appVersion: self.appVersion)
+            self.dismiss(animated: true)
         }), for: .touchUpInside)
         continueButton.translatesAutoresizingMaskIntoConstraints = false
         continueButton.heightAnchor.constraint(equalToConstant: continueButtonHeight).isActive = true
@@ -93,6 +80,18 @@ public class WNViewController: UIViewController {
         configViews()
         isModalInPresentation = true
     }
+    
+    
+    // MARK: - Constructors
+    required init(items: [WNItem], appVersion: String) {
+        self.items = items
+        self.appVersion = appVersion
+        super.init(nibName: nil, bundle: nil)
+    }
+    public required init?(coder: NSCoder) {
+        self.appVersion = "1.0"
+        super.init(coder: coder)
+    }
 }
 
 
@@ -123,5 +122,16 @@ extension WNViewController: UICollectionViewDataSource, UICollectionViewDelegate
     // MARK: Delegate
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         CGSize(width: collectionView.frame.width, height: WNItemCell.preferredHeight)
+    }
+}
+
+
+// MARK: - AppVersion
+extension WNViewController {
+    private func updateWhatsNew(appVersion: String) {
+        UserDefaults.standard.setValue(appVersion, forKey: "WN_App_Version")
+    }
+    public func shouldDisplayWhatsNew() -> Bool {
+        UserDefaults.standard.string(forKey: "WN_App_Version") != appVersion
     }
 }
