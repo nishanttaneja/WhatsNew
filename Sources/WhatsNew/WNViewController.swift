@@ -83,7 +83,7 @@ public class WNViewController: UIViewController {
     
     
     // MARK: - Constructors
-    required init(items: [WNItem], appVersion: String) {
+    public required init(items: [WNItem], appVersion: String) {
         self.items = items
         self.appVersion = appVersion
         super.init(nibName: nil, bundle: nil)
